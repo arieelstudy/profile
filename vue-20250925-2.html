@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vue-axios練習</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/my.css">
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="display-3 fw-400 text-bg-dark my-4 text-center p-2">{{ title }}</div>
+            <div class="row">
+                <!-- <div class="col-md-4 mt-4" v-for="(item,key) in alldata"> 沒加入分頁的樣子-->
+                <div class="col-md-4 mt-4" v-for="(item,key) in filterData[currentPage]">
+                    <div class="card h-100">
+                        <img :src="item.PicURL" class="card-img-top" alt="...">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">名稱: {{ item.Name }}</h5>
+                            <h5 class="card-title">地址: {{ item.Adress }}</h5>
+                            <h5 class="card-title">電話: {{ item.Tel }}</h5>
+                            <a :href="item.Url" target="_blank" class="btn btn-primary d-block mt-auto">官網</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分頁。顯示資料總共幾頁 -->
+            <div class="row mt-3">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content">
+                        <li class="page-item" v-if=" currentPage > 0">
+                            <a class="page-link" href="#" aria-label="Previous"@click.prevent="currentPage = currentPage -1" >
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <!-- 這裡是還沒有加入選到那一個頁數會反白的功能 -->
+                        <!-- <li class="page-item" v-for="page in filterData.length">
+                            <a class="page-link" href="#" @click.prevent="currentPage = page -1">{{ page }}</a>
+                        </li> -->
+
+                        <!-- 這裡是加入:class"{ '': ''}" -->
+                        <li class="page-item" v-for="page in filterData.length">
+                            <a class="page-link" :class="{'active':'currentPage == page -1 '}" href="#" @click.prevent="currentPage = page -1">{{ page }}</a>
+                        </li>
+
+                        <li class="page-item" v-if=" currentPage < filterData.length-1 ">
+                            <a class="page-link" href="#" aria-label="Next" @click.prevent="currentPage = currentPage + 1" >
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+    <script>
+        //opendata的資料 https://data.moa.gov.tw/Service/OpenData/ODwsv/ODwsvTravelFood.aspx?IsTransData=1&UnitId=193
+
+        const App = {
+            data() {
+                return {
+                    title: 'Axios練習',
+                    alldata: [],
+                    currentPage: 0
+                }
+            },
+            created() {
+                //取得外部資料，從axios官網抓資料
+                //不直接貼網址，const url=''
+                // axios.get('/user?ID=12345')
+                //     .then(function (response) {
+                //         console.log(response);
+                //     })
+                const vm = this; //代替this，不然很容易出錯
+                const url = 'https://data.moa.gov.tw/Service/OpenData/ODwsv/ODwsvTravelFood.aspx?IsTransData=1&UnitId=193';
+                axios.get(url)
+                    .then(function (response) {
+                        console.log(response);
+                        vm.alldata = response.data;
+                    })
+                    .catch(function (error) {
+                        // handle error
+                        console.log(error);
+                    })
+                    .finally(function () {
+                        // always executed
+                    });
+            },
+            methods: {
+
+            },
+            computed: {
+                //將資料重構，每9筆為一頁
+                filterData() {
+                    const vm = this;
+                    const newData = [];
+
+                    vm.alldata.forEach((item, key) => { //當迴圈索引值key是9的倍數時，就在newData陣列裡新增一個空的子陣列
+                        if (key % 9 == 0) {
+                            newData.push([]);
+                        }
+                        const page = parseInt(key / 9);
+                        newData[page].push(item);
+                    });
+                    return newData;
+                }
+            }
+        }
+        Vue.createApp(App).mount('#app')
+    </script>
+</body>
+
+</html>
